@@ -18,7 +18,7 @@
       "/portfolio/photos/vancouver-mountains-3.jpeg",
       "/portfolio/photos/vancouver-mountains-4.jpeg"
     ],
-    "timelapseUrl": null,
+    "timelapseUrl": "https://www.youtube.com/watch?v=pHTwqG2WMGA",
     "notes": null,
     "createdAt": "2026-06-04T00:00:00.000Z"
   },
@@ -38,7 +38,7 @@
     "photos": [
       "/portfolio/photos/downtown-vancouver.jpeg"
     ],
-    "timelapseUrl": null,
+    "timelapseUrl": "https://www.youtube.com/watch?v=M7UmmLhoyBQ",
     "notes": null,
     "createdAt": "2026-06-04T00:00:00.000Z"
   }
