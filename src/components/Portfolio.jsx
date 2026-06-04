@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Plus, Trash2, ExternalLink, Image, DollarSign, Pencil, Loader2 } from "lucide-react";
+import { Plus, Trash2, ExternalLink, Image, DollarSign, Pencil, Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "./ui/button.jsx";
 import { Input } from "./ui/input.jsx";
 import { Card, CardHeader, CardTitle, CardContent } from "./ui/card.jsx";
@@ -59,6 +59,57 @@ function YouTubeFacade({ url }) {
   );
 }
 
+function PhotoCarousel({ photos, title }) {
+  const [index, setIndex] = useState(0);
+  if (!photos || photos.length === 0) {
+    return (
+      <div className="w-full h-52 bg-gradient-to-br from-teal-50 to-slate-100 flex items-center justify-center border-b border-slate-100">
+        <Image size={36} className="text-slate-300" />
+      </div>
+    );
+  }
+
+  const prev = () => setIndex((i) => (i - 1 + photos.length) % photos.length);
+  const next = () => setIndex((i) => (i + 1) % photos.length);
+
+  return (
+    <div className="relative w-full h-52 border-b border-slate-100 overflow-hidden group">
+      <img
+        src={photos[index]}
+        alt={`${title} photo ${index + 1}`}
+        className="w-full h-full object-cover transition-opacity duration-200"
+      />
+
+      {photos.length > 1 && (
+        <>
+          <button
+            onClick={prev}
+            className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
+          >
+            <ChevronLeft size={16} />
+          </button>
+          <button
+            onClick={next}
+            className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/60"
+          >
+            <ChevronRight size={16} />
+          </button>
+
+          <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
+            {photos.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setIndex(i)}
+                className={`w-1.5 h-1.5 rounded-full transition-colors ${i === index ? "bg-white" : "bg-white/50"}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 function CostLine({ label, value }) {
   if (value == null) return null;
   return (
@@ -66,28 +117,6 @@ function CostLine({ label, value }) {
       {label}: <strong className="text-slate-700">${fmt(value)}</strong>
     </span>
   );
-}
-
-// Map snake_case DB row → camelCase entry used by UI
-function dbToEntry(row) {
-  return {
-    id: row.id,
-    title: row.title,
-    material: row.material,
-    brand: row.brand,
-    color: row.color,
-    weightG: row.weight_g != null ? Number(row.weight_g) : null,
-    pricePerKg: row.price_per_kg != null ? Number(row.price_per_kg) : null,
-    hours: row.hours != null ? Number(row.hours) : null,
-    ratePerHr: row.rate_per_hr != null ? Number(row.rate_per_hr) : null,
-    filamentCost: row.filament_cost != null ? Number(row.filament_cost) : null,
-    timeCost: row.time_cost != null ? Number(row.time_cost) : null,
-    totalCost: row.total_cost != null ? Number(row.total_cost) : null,
-    photoDataUrl: row.photo_data_url,
-    timelapseUrl: row.timelapse_url,
-    notes: row.notes,
-    createdAt: row.created_at,
-  };
 }
 
 function entryToForm(entry) {
@@ -115,8 +144,9 @@ export function Portfolio() {
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    api.list()
-      .then((rows) => setEntries(rows.map(dbToEntry)))
+    fetch("/data/portfolio.json")
+      .then((r) => r.json())
+      .then((data) => { if (Array.isArray(data)) setEntries(data); })
       .catch(console.error)
       .finally(() => setLoading(false));
   }, []);
@@ -132,7 +162,7 @@ export function Portfolio() {
 
   function openEdit(entry) {
     setForm(entryToForm(entry));
-    setPhotoDataUrl(entry.photoDataUrl || null);
+    setPhotoDataUrl(entry.photos?.[0] || null);
     setEditingId(entry.id);
     setFormOpen(true);
   }
@@ -166,6 +196,11 @@ export function Portfolio() {
     if (!form.title.trim()) return;
     setSaving(true);
     const costs = computeCosts();
+    const existingPhotos = editingId ? entries.find((e) => e.id === editingId)?.photos || [] : [];
+    const photos = photoDataUrl && !existingPhotos.includes(photoDataUrl)
+      ? [photoDataUrl, ...existingPhotos]
+      : existingPhotos;
+
     const entry = {
       ...form,
       weightG: parseFloat(form.weightG) || null,
@@ -175,7 +210,7 @@ export function Portfolio() {
       filamentCost: costs.filament,
       timeCost: costs.time,
       totalCost: costs.total,
-      photoDataUrl,
+      photos,
     };
 
     try {
@@ -183,7 +218,11 @@ export function Portfolio() {
         await api.update(editingId, entry);
         setEntries((prev) => prev.map((e) => e.id === editingId ? { ...e, ...entry } : e));
       } else {
-        const newEntry = { id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, ...entry, createdAt: new Date().toISOString() };
+        const newEntry = {
+          id: `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+          ...entry,
+          createdAt: new Date().toISOString(),
+        };
         await api.create(newEntry);
         setEntries((prev) => [newEntry, ...prev]);
       }
@@ -262,7 +301,6 @@ export function Portfolio() {
                 )}
               </div>
 
-              {/* Photo */}
               <div className="space-y-2">
                 <p className="text-sm text-slate-600">Photo</p>
                 {photoDataUrl ? (
@@ -273,7 +311,7 @@ export function Portfolio() {
                   </div>
                 ) : (
                   <label className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-dashed border-slate-300 cursor-pointer hover:border-teal-400 hover:bg-teal-50/30 transition-colors w-fit text-sm text-slate-500">
-                    <Image size={14} /> {isEditing ? "Replace photo" : "Upload photo"}
+                    <Image size={14} /> {isEditing ? "Add photo" : "Upload photo"}
                     <input type="file" accept="image/*" className="hidden" onChange={handlePhoto} />
                   </label>
                 )}
@@ -320,14 +358,7 @@ export function Portfolio() {
 
             return (
               <Card key={entry.id} className="overflow-hidden flex flex-col">
-                {entry.photoDataUrl ? (
-                  <img src={entry.photoDataUrl} alt={entry.title}
-                    className="w-full h-44 object-cover border-b border-slate-100" />
-                ) : (
-                  <div className="w-full h-44 bg-gradient-to-br from-teal-50 to-slate-100 flex items-center justify-center border-b border-slate-100">
-                    <Image size={36} className="text-slate-300" />
-                  </div>
-                )}
+                <PhotoCarousel photos={entry.photos} title={entry.title} />
 
                 <div className="p-4 flex flex-col gap-2 flex-1">
                   <div className="flex items-start justify-between gap-2">

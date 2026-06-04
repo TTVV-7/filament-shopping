@@ -1,0 +1,45 @@
+[
+  {
+    "id": "1-vancouver-mountains",
+    "title": "Vancouver and Mountains",
+    "material": null,
+    "brand": null,
+    "color": null,
+    "weightG": null,
+    "pricePerKg": null,
+    "hours": null,
+    "ratePerHr": null,
+    "filamentCost": null,
+    "timeCost": null,
+    "totalCost": null,
+    "photos": [
+      "/portfolio/photos/vancouver-mountains-1.jpeg",
+      "/portfolio/photos/vancouver-mountains-2.jpeg",
+      "/portfolio/photos/vancouver-mountains-3.jpeg",
+      "/portfolio/photos/vancouver-mountains-4.jpeg"
+    ],
+    "timelapseUrl": null,
+    "notes": null,
+    "createdAt": "2026-06-04T00:00:00.000Z"
+  },
+  {
+    "id": "2-downtown-vancouver",
+    "title": "Downtown Vancouver",
+    "material": null,
+    "brand": null,
+    "color": null,
+    "weightG": null,
+    "pricePerKg": null,
+    "hours": null,
+    "ratePerHr": null,
+    "filamentCost": null,
+    "timeCost": null,
+    "totalCost": null,
+    "photos": [
+      "/portfolio/photos/downtown-vancouver.jpeg"
+    ],
+    "timelapseUrl": null,
+    "notes": null,
+    "createdAt": "2026-06-04T00:00:00.000Z"
+  }
+]
