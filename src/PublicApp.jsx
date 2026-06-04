@@ -21,9 +21,12 @@ export function PublicApp() {
         {/* Header */}
         <div className="backdrop-blur-sm bg-white/75 border border-white/60 rounded-2xl shadow-sm px-6 py-5 mb-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-800 tracking-tight">🧵 Filament Lab</h1>
-              <p className="text-sm text-slate-500 mt-0.5">3D print portfolio &amp; requests</p>
+            <div className="flex items-center gap-3">
+              <img src="/logo-circle.png" alt="MAP3D logo" className="w-12 h-12 rounded-full shadow-sm" />
+              <div>
+                <h1 className="text-2xl font-bold text-slate-800 tracking-tight">MAP3D</h1>
+                <p className="text-sm text-slate-500 mt-0.5">Topographical Maps &amp; 3D Prints</p>
+              </div>
             </div>
 
             <div className="flex items-center gap-3">
