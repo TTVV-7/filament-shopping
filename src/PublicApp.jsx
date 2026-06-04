@@ -3,6 +3,7 @@ import { Printer, GalleryHorizontalEnd, Settings } from "lucide-react";
 import { Link } from "react-router-dom";
 import { PrintRequests } from "./components/PrintRequests.jsx";
 import { Portfolio } from "./components/Portfolio.jsx";
+import { BackgroundOrbs } from "./components/BackgroundOrbs.jsx";
 import { cn } from "./lib/utils.js";
 
 const TABS = [
@@ -14,8 +15,9 @@ export function PublicApp() {
   const [tab, setTab] = useState("portfolio");
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-100">
-      <div className="max-w-screen-xl mx-auto px-4 py-6 pb-16">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-sky-100 relative">
+      <BackgroundOrbs />
+      <div className="relative max-w-screen-xl mx-auto px-4 py-6 pb-16" style={{ zIndex: 1 }}>
         {/* Header */}
         <div className="backdrop-blur-sm bg-white/75 border border-white/60 rounded-2xl shadow-sm px-6 py-5 mb-4">
           <div className="flex items-center justify-between flex-wrap gap-3">
