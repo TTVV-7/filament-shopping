@@ -1,0 +1,7 @@
+[bambu_lab_us] scraped 36 items
+[amazon_us_pla_search] scrape failed: amazon_us_pla_search: no products matched selector 'div[data-component-type='s-search-result']'. Site markup likely changed.
+[overture_us_filament] scrape failed: overture_us_filament: no products matched selector '.grid__item, .product-grid-item, .card-wrapper'. Site markup likely changed.
+[creality_us_filament] scraped 0 items
+[prusa_us_filament] scrape failed: prusa_us_filament: no products matched selector 'article, .product, li.product'. Site markup likely changed.
+Stored 36 records
+Detected 36 price changes

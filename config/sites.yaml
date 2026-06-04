@@ -1,0 +1,45 @@
+sites:
+  - name: bambu_lab_us
+    url: https://ca.store.bambulab.com/collections/bambu-lab-3d-printer-filament
+    currency: CAD
+    selectors:
+      product: div.ProductItem
+      title: h2 a, h2
+      price: h2 + div
+      link: a[href*='/en/products/']
+
+  - name: amazon_us_pla_search
+    url: https://www.amazon.com/s?k=filament+pla
+    currency: USD
+    selectors:
+      product: div[data-component-type='s-search-result']
+      title: h2 span
+      price: .a-price .a-offscreen
+      link: h2 a
+
+  - name: overture_us_filament
+    url: https://overture3d.com/collections/filaments
+    currency: USD
+    selectors:
+      product: .grid__item, .product-grid-item, .card-wrapper
+      title: .card__heading, .product-card__title, h3, h2
+      price: .price-item--sale, .price-item, .price
+      link: a[href]
+
+  - name: creality_us_filament
+    url: https://store.creality.com/collections/filament
+    currency: USD
+    selectors:
+      product: .grid__item, .product-item, .card-wrapper
+      title: .card__heading, .product-title, h3, h2
+      price: .price-item--sale, .price-item, .price
+      link: a[href]
+
+  - name: prusa_us_filament
+    url: https://www.prusa3d.com/category/prusament/
+    currency: USD
+    selectors:
+      product: article, .product, li.product
+      title: h2, h3, .woocommerce-loop-product__title
+      price: .price, .woocommerce-Price-amount
+      link: a[href]

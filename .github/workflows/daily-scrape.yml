@@ -1,0 +1,36 @@
+name: Daily Filament Scrape
+
+on:
+  schedule:
+    - cron: "0 8 * * *"
+  workflow_dispatch:
+
+jobs:
+  scrape:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run scraper
+        env:
+          SITES_CONFIG_PATH: config/sites.yaml
+          DB_PATH: data/filament_prices.db
+          ZAPIER_WEBHOOK_URL: ${{ secrets.ZAPIER_WEBHOOK_URL }}
+        run: PYTHONPATH=src python -m filament_tracker.main
+
+      - name: Upload latest export artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: filament-latest-prices
+          path: exports/latest_prices.csv
+          if-no-files-found: ignore

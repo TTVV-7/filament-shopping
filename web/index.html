@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Filament Intel Dashboard</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <h1>Filament Intel</h1>
+      <p class="subtitle">Table-first view with one filter string. Use brand, material, color, specs, and price constraints in one line.</p>
+      <div id="meta" class="meta"></div>
+
+      <div class="tabRow">
+        <button id="tabDeals" class="tabBtn active" type="button">Deals Table</button>
+        <button id="tabStores" class="tabBtn" type="button">Store Links</button>
+        <button id="tabManage" class="tabBtn" type="button">Filament Management</button>
+      </div>
+    </header>
+
+    <section id="dealsPanel" class="panel activeTabPanel">
+      <div class="queryRow">
+        <input id="queryFilter" type="text" placeholder="Example: brand:jayo material:petg spec:high-speed minweight:1 maxweight:5 maxppk:25" />
+        <button id="clearQueryBtn" type="button">Clear</button>
+      </div>
+      <div class="hint">Supported tokens: brand:, material:, source:, color:, spec:, maxppk:, minppk:, maxprice:, minprice:, maxweight:, minweight:, weight:. Any extra words search title/brand/specs.</div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Material</th>
+              <th>Brand</th>
+              <th>Source</th>
+              <th>Colors</th>
+              <th>Specs</th>
+              <th>Price</th>
+              <th>Weight (kg)</th>
+              <th>CAD/kg</th>
+              <th>Title</th>
+              <th>Link</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="storesPanel" class="panel hiddenTabPanel">
+      <h2>Store Links</h2>
+      <div class="storeGrid">
+        <a class="storeCard" href="https://www.amazon.ca/s?k=pla+filament+1.75mm" target="_blank" rel="noopener noreferrer">
+          <div class="storeName">Amazon Canada</div>
+          <div class="storeMeta">Search filament deals</div>
+        </a>
+        <a class="storeCard" href="https://ca.store.bambulab.com/collections/bambu-lab-3d-printer-filament" target="_blank" rel="noopener noreferrer">
+          <div class="storeName">Bambu Lab</div>
+          <div class="storeMeta">Bulk-sale collection</div>
+        </a>
+        <a class="storeCard" href="https://overture3d.com/collections/filaments" target="_blank" rel="noopener noreferrer">
+          <div class="storeName">Overture</div>
+          <div class="storeMeta">Brand storefront</div>
+        </a>
+        <a class="storeCard" href="https://store.creality.com/collections/filament" target="_blank" rel="noopener noreferrer">
+          <div class="storeName">Creality</div>
+          <div class="storeMeta">Official store</div>
+        </a>
+        <a class="storeCard" href="https://www.prusa3d.com/category/prusament/" target="_blank" rel="noopener noreferrer">
+          <div class="storeName">Prusa / Prusament</div>
+          <div class="storeMeta">Direct filament shop</div>
+        </a>
+      </div>
+    </section>
+
+    <section id="managePanel" class="panel hiddenTabPanel">
+      <h2>Filament Management</h2>
+      <p class="subtitle panelSubtitle">Track your stock by spool and subtract print usage to estimate what is left.</p>
+
+      <div class="manageGrid">
+        <section class="manageCard">
+          <h3>Bambu Labs Connection</h3>
+          <p class="cardHint">Connect info is saved locally for now. Official cloud history sync can be wired in when Bambu exposes a stable API endpoint.</p>
+          <form id="bambuConnectForm" class="formStack">
+            <label>
+              Account Email
+              <input id="bambuEmail" type="email" placeholder="you@example.com" />
+            </label>
+            <label>
+              API Token (optional)
+              <input id="bambuToken" type="password" placeholder="Paste token if available" />
+            </label>
+            <div class="rowActions">
+              <button id="connectBambuBtn" type="submit">Connect Account</button>
+              <button id="disconnectBambuBtn" type="button" class="ghostBtn">Disconnect</button>
+            </div>
+          </form>
+          <div id="bambuStatus" class="statusLine">Not connected</div>
+        </section>
+
+        <section class="manageCard">
+          <h3>Add Spool Inventory</h3>
+          <form id="inventoryForm" class="formStack">
+            <div class="fieldGrid threeCol">
+              <label>
+                Brand
+                <input id="invBrand" type="text" placeholder="Bambu Lab" required />
+              </label>
+              <label>
+                Material
+                <input id="invMaterial" type="text" placeholder="PLA" required />
+              </label>
+              <label>
+                Color
+                <input id="invColor" type="text" placeholder="Black" required />
+              </label>
+            </div>
+            <div class="fieldGrid twoCol">
+              <label>
+                Starting Weight (g)
+                <input id="invWeight" type="number" min="1" step="1" placeholder="1000" required />
+              </label>
+              <label>
+                Notes
+                <input id="invNotes" type="text" placeholder="AMS slot A1" />
+              </label>
+            </div>
+            <button type="submit">Add Spool</button>
+          </form>
+        </section>
+
+        <section class="manageCard">
+          <h3>Add Print History Usage</h3>
+          <form id="historyForm" class="formStack">
+            <div class="fieldGrid threeCol">
+              <label>
+                Brand
+                <input id="histBrand" type="text" placeholder="Bambu Lab" required />
+              </label>
+              <label>
+                Material
+                <input id="histMaterial" type="text" placeholder="PLA" required />
+              </label>
+              <label>
+                Color
+                <input id="histColor" type="text" placeholder="Black" required />
+              </label>
+            </div>
+            <div class="fieldGrid threeCol">
+              <label>
+                Used (g)
+                <input id="histUsed" type="number" min="1" step="1" placeholder="42" required />
+              </label>
+              <label>
+                Print Name
+                <input id="histName" type="text" placeholder="Benchy test" />
+              </label>
+              <label>
+                Date
+                <input id="histDate" type="date" />
+              </label>
+            </div>
+            <button type="submit">Add Usage Entry</button>
+          </form>
+          <p class="cardHint">Tip: add one entry per completed print. Remaining filament updates instantly.</p>
+        </section>
+      </div>
+
+      <div class="manageActions">
+        <button id="clearUsageBtn" type="button" class="ghostBtn">Clear Usage History</button>
+        <button id="clearInventoryBtn" type="button" class="ghostBtn">Clear Inventory</button>
+      </div>
+
+      <div class="tableWrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Brand</th>
+              <th>Material</th>
+              <th>Color</th>
+              <th>Spools</th>
+              <th>Start (g)</th>
+              <th>Used (g)</th>
+              <th>Remaining (g)</th>
+              <th>Remaining (%)</th>
+            </tr>
+          </thead>
+          <tbody id="filamentSummaryBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+  <script src="app.js?v=table-v3"></script>
+</body>
+</html>

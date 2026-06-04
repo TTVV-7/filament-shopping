@@ -1,0 +1,315 @@
+:root {
+  --ink: #1f2a37;
+  --muted: #62748a;
+  --line: #d6dee8;
+  --card: #ffffff;
+  --accent: #0f766e;
+  --bgA: #ecfdf5;
+  --bgB: #f8fafc;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 480px at 120% -10%, #d9f99d 0%, transparent 60%),
+    radial-gradient(900px 420px at -15% 0%, #bfdbfe 0%, transparent 55%),
+    linear-gradient(180deg, var(--bgA) 0%, var(--bgB) 65%);
+  font-family: "Avenir Next", "Segoe UI", sans-serif;
+}
+
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px 16px 40px;
+}
+
+.hero {
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(214, 222, 232, 0.8);
+  backdrop-filter: blur(8px);
+  border-radius: 16px;
+  padding: 16px;
+}
+
+h1 {
+  margin: 0;
+  font-size: 34px;
+  letter-spacing: 0.01em;
+}
+
+h2 {
+  margin: 0 0 10px;
+  color: #0b6b79;
+}
+
+.subtitle {
+  margin: 6px 0 14px;
+  color: var(--muted);
+}
+
+.tabRow {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.tabBtn {
+  background: #fff;
+  color: #0f766e;
+  border: 1px solid #8ad1ca;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.tabBtn.active {
+  background: #0f766e;
+  border-color: #0f766e;
+  color: #fff;
+}
+
+.hiddenTabPanel {
+  display: none;
+}
+
+.activeTabPanel {
+  display: block;
+}
+
+.queryRow {
+  display: grid;
+  grid-template-columns: 1fr 120px;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.hint {
+  color: var(--muted);
+  font-size: 12px;
+  margin-bottom: 10px;
+}
+
+select,
+input,
+button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 9px 10px;
+  font-size: 14px;
+  background: #fff;
+}
+
+button {
+  align-self: end;
+  cursor: pointer;
+  color: #fff;
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+button:hover {
+  filter: brightness(0.95);
+}
+
+.meta {
+  margin-top: 10px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.panel {
+  margin-top: 14px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  padding: 12px;
+}
+
+.panelSubtitle {
+  margin-top: 0;
+}
+
+.manageGrid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.manageCard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fcfffe;
+}
+
+.manageCard h3 {
+  margin: 0 0 8px;
+}
+
+.formStack {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldGrid {
+  display: grid;
+  gap: 8px;
+}
+
+.fieldGrid.threeCol {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.fieldGrid.twoCol {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+label {
+  display: grid;
+  gap: 6px;
+  font-size: 13px;
+  color: #334155;
+}
+
+.rowActions {
+  display: flex;
+  gap: 8px;
+}
+
+.ghostBtn {
+  background: #ffffff;
+  color: #0f766e;
+  border-color: #8ad1ca;
+}
+
+.ghostBtn:hover {
+  filter: none;
+  background: #ecfdf5;
+}
+
+.statusLine {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #7c2d12;
+}
+
+.statusLine.connected {
+  color: #166534;
+}
+
+.cardHint {
+  margin: 0 0 8px;
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.manageActions {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.chip {
+  display: inline-block;
+  margin: 2px 4px 2px 0;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #e2e8f0;
+  font-size: 11px;
+  color: #334155;
+}
+
+.swatch {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.18);
+}
+
+.tableWrap {
+  overflow-x: auto;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th,
+td {
+  text-align: left;
+  border-bottom: 1px solid var(--line);
+  padding: 8px 6px;
+  font-size: 13px;
+  vertical-align: top;
+}
+
+th {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+a {
+  color: #0b6b79;
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+.storeGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 10px;
+}
+
+.storeCard {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px;
+  background: #fff;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.storeCard:hover {
+  border-color: #80cbc4;
+  box-shadow: 0 2px 14px rgba(15, 118, 110, 0.08);
+  text-decoration: none;
+}
+
+.storeName {
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+
+.storeMeta {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 700px) {
+  h1 {
+    font-size: 28px;
+  }
+
+  .queryRow {
+    grid-template-columns: 1fr;
+  }
+
+  .fieldGrid.threeCol,
+  .fieldGrid.twoCol {
+    grid-template-columns: 1fr;
+  }
+
+  .manageActions,
+  .rowActions {
+    flex-direction: column;
+  }
+}
