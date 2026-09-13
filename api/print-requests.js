@@ -1,12 +1,23 @@
 import { getDb, json, err } from "./db.js";
 
-// Columns that identify a customer. This endpoint has no authentication, so
-// they are never returned over GET -- the full details go out by email instead.
-const PRIVATE_COLUMNS = ["customer_name", "customer_email", "details", "budget", "files"];
+// This endpoint has no authentication, so GET exposes an explicit allowlist of
+// non-identifying operational fields. An allowlist rather than a denylist:
+// the production table already carried requester_name / requester_email from an
+// earlier deploy, and a denylist naming only the current columns leaked them.
+// Anything not listed here -- contact details, free text, uploaded file URLs,
+// and any column added later -- stays private. Full details go out by email.
+const PUBLIC_COLUMNS = [
+  "id", "mode", "material", "quality", "quantity",
+  "deadline", "status", "submitted_at",
+  "weight_g", "print_time_hrs",
+  "filament_cost", "time_cost", "total_cost",
+];
 
-function redact(row) {
-  const out = { ...row };
-  for (const col of PRIVATE_COLUMNS) delete out[col];
+function publicView(row) {
+  const out = {};
+  for (const col of PUBLIC_COLUMNS) {
+    if (col in row) out[col] = row[col];
+  }
   return out;
 }
 
@@ -17,7 +28,7 @@ export default async function handler(req) {
     const rows = await sql`
       SELECT * FROM print_requests ORDER BY submitted_at DESC
     `;
-    return json(rows.map(redact));
+    return json(rows.map(publicView));
   }
 
   if (req.method === "POST") {
