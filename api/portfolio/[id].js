@@ -34,3 +34,9 @@ export default async function handler(req) {
 
   return err("Method not allowed", 405);
 }
+
+// These handlers use the Web fetch signature (Request in, Response out),
+// which requires the edge runtime -- under the Node runtime the default
+// export is called as (req, res) and a returned Response is ignored,
+// leaving the request to hang until it times out.
+export const config = { runtime: "edge" };
