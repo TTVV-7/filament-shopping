@@ -2,6 +2,10 @@
 //
 // Files go from the browser straight to Blob storage, which sidesteps Vercel's
 // 4.5 MB serverless request-body limit -- STLs are routinely larger than that.
+//
+// Runs on the Node runtime (no `config` export): @vercel/blob pulls in undici,
+// which the edge runtime rejects as an unsupported module. The DB routes stay
+// on edge; only this one needs Node.
 import { handleUpload } from "@vercel/blob/client";
 
 const MAX_BYTES = 25 * 1024 * 1024;
@@ -26,28 +30,22 @@ const ALLOWED_CONTENT_TYPES = [
   "text/plain",
 ];
 
-export default async function handler(req) {
+export default async function handler(req, res) {
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(405).json({ error: "Method not allowed" });
   }
 
   if (!process.env.BLOB_READ_WRITE_TOKEN) {
     console.error("upload: BLOB_READ_WRITE_TOKEN is not set");
-    return new Response(JSON.stringify({ error: "Uploads are not configured" }), {
-      status: 500,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(500).json({ error: "Uploads are not configured" });
   }
 
   try {
-    const body = await req.json();
-
     const result = await handleUpload({
-      body,
-      request: req,
+      body: req.body,
+      // handleUpload reads signature headers the Web way; Node gives a plain
+      // object, so wrap it to expose .get().
+      request: { headers: new Headers(req.headers) },
       onBeforeGenerateToken: async () => ({
         allowedContentTypes: ALLOWED_CONTENT_TYPES,
         maximumSizeInBytes: MAX_BYTES,
@@ -58,21 +56,9 @@ export default async function handler(req) {
       },
     });
 
-    return new Response(JSON.stringify(result), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(200).json(result);
   } catch (error) {
     console.error("upload: token generation failed", error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    });
+    return res.status(400).json({ error: error.message });
   }
 }
-
-// These handlers use the Web fetch signature (Request in, Response out),
-// which requires the edge runtime -- under the Node runtime the default
-// export is called as (req, res) and a returned Response is ignored,
-// leaving the request to hang until it times out.
-export const config = { runtime: "edge" };
