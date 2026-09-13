@@ -68,5 +68,19 @@ export default async function handler(req) {
     )
   `;
 
+  // Quote-request fields added with the service redesign. ADD COLUMN IF NOT
+  // EXISTS keeps this safe against the production table, which already carries
+  // some contact columns from an earlier deploy.
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS customer_name  TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS customer_email TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS material       TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS quality        TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS quantity       INTEGER`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS deadline       TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS budget         TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS details        TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS status         TEXT DEFAULT 'new'`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS files          TEXT`;
+
   return json({ ok: true, message: "All tables created" });
 }

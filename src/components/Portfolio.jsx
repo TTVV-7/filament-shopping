@@ -134,7 +134,7 @@ function entryToForm(entry) {
   };
 }
 
-export function Portfolio() {
+export function Portfolio({ readOnly = false }) {
   const [entries, setEntries] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -144,7 +144,7 @@ export function Portfolio() {
   const [editingId, setEditingId] = useState(null);
 
   useEffect(() => {
-    fetch("/data/portfolio.json")
+    fetch(`${import.meta.env.BASE_URL}data/portfolio.json`)
       .then((r) => r.json())
       .then((data) => { if (Array.isArray(data)) setEntries(data); })
       .catch(console.error)
@@ -334,7 +334,7 @@ export function Portfolio() {
             </form>
           </CardContent>
         </Card>
-      ) : (
+      ) : readOnly ? null : (
         <div className="flex justify-end">
           <Button onClick={openAdd}><Plus size={15} /> Add Print</Button>
         </div>
@@ -363,16 +363,18 @@ export function Portfolio() {
                 <div className="p-4 flex flex-col gap-2 flex-1">
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-slate-800 text-sm leading-snug">{entry.title}</h3>
-                    <div className="flex items-center gap-1 flex-shrink-0">
-                      <button onClick={() => openEdit(entry)}
-                        className="text-slate-300 hover:text-teal-500 transition-colors p-0.5">
-                        <Pencil size={13} />
-                      </button>
-                      <button onClick={() => removeEntry(entry.id)}
-                        className="text-slate-300 hover:text-red-400 transition-colors p-0.5">
-                        <Trash2 size={13} />
-                      </button>
-                    </div>
+                    {!readOnly && (
+                      <div className="flex items-center gap-1 flex-shrink-0">
+                        <button onClick={() => openEdit(entry)}
+                          className="text-slate-300 hover:text-teal-500 transition-colors p-0.5">
+                          <Pencil size={13} />
+                        </button>
+                        <button onClick={() => removeEntry(entry.id)}
+                          className="text-slate-300 hover:text-red-400 transition-colors p-0.5">
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex flex-wrap gap-1">

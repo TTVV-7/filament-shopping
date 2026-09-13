@@ -23,7 +23,7 @@ export function AdminApp() {
 
   useEffect(() => {
     if (!unlocked) return;
-    fetch("/data/amazon_filament_research.json", { cache: "no-store" })
+    fetch(`${import.meta.env.BASE_URL}data/amazon_filament_research.json`, { cache: "no-store" })
       .then((r) => { if (!r.ok) throw new Error(`HTTP ${r.status}`); return r.json(); })
       .then((p) => setRows(p.records || []))
       .catch((e) => setError(e.message))
