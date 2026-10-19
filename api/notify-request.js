@@ -1,46 +1,20 @@
-// Emails a new quote request to the shop owner via Resend, and sends the
-// customer a confirmation with the rough price estimate.
+// Emails a new quote request to the shop owner via Resend, with the rough
+// price estimate the website works out from the customer's STL / 3MF files.
+// (The customer's own confirmation is sent by the website, api/quote-confirm.js.)
 //
 // Rebuilt to match the live endpoint observed in production runtime logs
 // ("POST /api/notify-request 200 -- Resend response: 200 {id:...}").
 // Fire-and-forget from the client: a failure here must never lose the request,
 // which is already persisted separately by /api/print-requests.
-import { getDb } from "./db.js";
 
 const RESEND_ENDPOINT = "https://api.resend.com/emails";
 
 const TO = process.env.NOTIFY_TO || "thomas.verigin@gmail.com";
 // Resend rejects unverified senders. onboarding@resend.dev works without a
 // verified domain; override with a real address once the domain is set up.
-// Customer confirmations need that: onboarding@resend.dev can only send to
-// the Resend account's own address.
 const FROM = process.env.NOTIFY_FROM || "MAP3D <onboarding@resend.dev>";
-const BUSINESS = process.env.BUSINESS_NAME || "Print Yours";
 
 const FONT = "font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
-
-// Signature at the bottom of the customer's confirmation email, matching the
-// Gmail one. The logo is served by the printyours.ca site (public/email/).
-const SIGNATURE = `<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:24px">
-  <tr>
-    <td style="vertical-align:middle;padding-right:18px">
-      <a href="https://printyours.ca"><img src="https://printyours.ca/email/signature-logo.png" width="160" height="60" alt="printyours.ca" style="display:block;width:160px;height:60px;border:0"></a>
-    </td>
-    <td style="vertical-align:top;border-left:3px solid #f5a623;padding-left:16px;font-size:13px;line-height:1.5;color:#64748b">
-      <div style="font-size:17px;font-weight:700;color:#0f172a">Thomas Verigin</div>
-      <div>Owner, <strong style="color:#0f172a">Print Yours</strong> &middot; Custom 3D printing in Vancouver</div>
-      <div style="margin-top:8px;font-size:13px;color:#cbd5e1">
-        <a href="https://printyours.ca" style="color:#0f172a;font-weight:700;text-decoration:none">printyours.ca</a>
-        &nbsp;|&nbsp; <a href="mailto:thomas.verigin@gmail.com" style="color:#0f172a;text-decoration:none">thomas.verigin@gmail.com</a>
-        &nbsp;|&nbsp; <a href="tel:+17789845255" style="color:#0f172a;text-decoration:none;white-space:nowrap">778-984-5255</a>
-      </div>
-      <div style="font-size:12px">Parts, prototypes &amp; small batches &middot; Free quote in 1 business day &middot; Local pickup</div>
-      <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:10px"><tr>
-        <td style="background:#f5a623;border-radius:4px"><a href="https://printyours.ca/#quote" style="display:inline-block;padding:7px 12px;color:#0f172a;font-weight:700;font-size:13px;text-decoration:none">Get a free quote &rarr;</a></td>
-      </tr></table>
-    </td>
-  </tr>
-</table>`;
 
 function esc(value) {
   return String(value ?? "")
@@ -59,10 +33,14 @@ function row(label, value) {
 }
 
 // Only images we stored ourselves get embedded; anything else stays a link.
+// The website keeps uploads private and serves them at
+// printyours.ca/api/sticker-file; older ones are public Blob URLs.
 function isOurImage(url) {
   try {
     const u = new URL(url);
-    return u.protocol === "https:" && u.hostname.endsWith(".public.blob.vercel-storage.com");
+    if (u.protocol !== "https:") return false;
+    if (u.hostname.endsWith(".public.blob.vercel-storage.com")) return true;
+    return /^(www\.)?printyours\.ca$/.test(u.hostname) && u.pathname === "/api/sticker-file";
   } catch {
     return false;
   }
@@ -82,26 +60,28 @@ function money(value) {
   return p[0] === p[1] ? `$${p[0]}` : `$${p[0]}–$${p[1]}`;
 }
 
+// A single number or a [low, high] pair, with its unit.
 function span(value, unit) {
+  if (Number.isFinite(Number(value)) && !Array.isArray(value)) return `${Number(value)} ${unit}`;
   const p = pair(value);
   if (!p) return "";
   return p[0] === p[1] ? `${p[0]} ${unit}` : `${p[0]}–${p[1]} ${unit}`;
 }
 
 // One row per 3D model: preview, size, weight, time, price range.
-function modelRow(file, quantity, { forOwner }) {
+function modelRow(file, quantity) {
   const e = file.estimate || {};
   const preview = isOurImage(file.previewUrl)
     ? `<img src="${esc(file.previewUrl)}" width="160" height="120" alt="" style="display:block;width:160px;height:120px;border-radius:8px;border:1px solid #e2e8f0">`
     : "";
-  const name = forOwner && file.url
+  const name = file.url
     ? `<a href="${esc(file.url)}" style="color:#0d9488;font-weight:600">${esc(file.name)}</a>`
     : `<span style="font-weight:600">${esc(file.name)}</span>`;
 
   let body;
   if (e.error) {
     body = `<div style="color:#64748b;font-size:13px;margin-top:4px">${
-      forOwner ? `Couldn't measure this file (${esc(e.error)}). Price it by hand.` : "I'll price this one by hand."
+      `Couldn't measure this file (${esc(e.error)}). Price it by hand.`
     }</div>`;
   } else {
     const size = Array.isArray(e.sizeMm) ? e.sizeMm.map(Number).join(" × ") + " mm" : "";
@@ -109,7 +89,7 @@ function modelRow(file, quantity, { forOwner }) {
       ? ` <span style="color:#64748b;font-weight:400;font-size:13px">(${quantity} × ${esc(money(e.each))})</span>`
       : "";
     body = `<div style="color:#475569;font-size:13px;line-height:1.6;margin-top:4px">
-        ${size ? `${esc(size)}<br>` : ""}${esc(span(e.grams, "g"))} &middot; ${esc(span(e.hours, "h"))} of printing
+        ${size ? `${esc(size)}<br>` : ""}${[span(e.grams, "g"), span(e.hours, "h of printing")].filter(Boolean).map(esc).join(" &middot; ")}
       </div>
       <div style="margin-top:6px;font-size:16px;font-weight:600;color:#0f172a">${esc(money(e.price))}${each}</div>
       ${e.tooBig ? `<div style="color:#b45309;font-size:12px;margin-top:4px">Bigger than the print bed, may need to be split into parts.</div>` : ""}`;
@@ -121,18 +101,18 @@ function modelRow(file, quantity, { forOwner }) {
   </tr>`;
 }
 
-function estimateSection(files, estimate, quantity, { forOwner }) {
+function estimateSection(files, estimate, quantity) {
   const models = files.filter((f) => f && f.estimate);
   if (!models.length) return "";
   const total = estimate && pair(estimate.price)
     ? `<div style="margin-top:12px;background:#f0fdfa;border:1px solid #99f6e4;border-radius:10px;padding:12px 14px">
         <div style="font-size:13px;color:#0f766e">Rough total${estimate.partial ? " (measured files only)" : ""}</div>
         <div style="font-size:22px;font-weight:700;color:#0f172a">${esc(money(estimate.price))}</div>
-        <div style="font-size:12px;color:#64748b;margin-top:2px">Includes a $${esc(Number(estimate.setupFee) || 0)} setup fee; orders start at $${esc(Number(estimate.minimumOrder) || 0)}. CAD, before tax and shipping.</div>
+        <div style="font-size:12px;color:#64748b;margin-top:2px">Automatic estimate from the files; orders start at $${esc(Number(estimate.minimumOrder) || 0)}. CAD, before tax and shipping.</div>
       </div>`
     : "";
-  return `<p style="margin:18px 0 2px;color:#64748b;font-size:13px">${forOwner ? "Automatic estimate" : "Your parts"}</p>
-    <table style="border-collapse:collapse;width:100%">${models.map((f) => modelRow(f, quantity, { forOwner })).join("")}</table>
+  return `<p style="margin:18px 0 2px;color:#64748b;font-size:13px">Automatic estimate</p>
+    <table style="border-collapse:collapse;width:100%">${models.map((f) => modelRow(f, quantity)).join("")}</table>
     ${total}`;
 }
 
@@ -160,8 +140,8 @@ function ownerEmail(b) {
       ${row("Budget", b.budget)}
       ${row("Reference", b.url)}
     </table>
-    ${estimateSection(files, b.estimate, Number(b.quantity) || 1, { forOwner: true })}
-    ${photos.length ? `<p style="margin:18px 0 6px;color:#64748b;font-size:13px">Photos</p>
+    ${estimateSection(files, b.estimate, Number(b.quantity) || 1)}
+    ${photos.length ? `<p style="margin:18px 0 6px;color:#64748b;font-size:13px">Images</p>
     ${photos.map((f) => `<a href="${esc(f.url)}"><img src="${esc(f.url)}" alt="${esc(f.name)}" width="260" style="display:inline-block;width:260px;max-width:100%;border-radius:8px;border:1px solid #e2e8f0;margin:0 8px 8px 0"></a>`).join("")}` : ""}
     ${links.length ? `<p style="margin:18px 0 6px;color:#64748b;font-size:13px">${links.length < files.length ? "Other files" : "Files"}</p>
     <ul style="margin:0;padding-left:18px;color:#0f172a;font-size:14px;line-height:1.7">
@@ -181,49 +161,6 @@ function ownerEmail(b) {
   };
 }
 
-function parseJson(text) {
-  try {
-    return typeof text === "string" ? JSON.parse(text) : text;
-  } catch {
-    return null;
-  }
-}
-
-// Built from the saved row, not the request body, and sent at most once per
-// request, so this endpoint can't be used to mail arbitrary content around.
-function customerEmail(r) {
-  const files = parseJson(r.files) || [];
-  const estimate = parseJson(r.estimate);
-  const firstName = String(r.customer_name || "").trim().split(/\s+/)[0].slice(0, 40);
-  const ref = String(r.id).slice(0, 8).toUpperCase();
-  const choices = [r.material, r.quality].filter(Boolean).join(", ");
-  const section = estimateSection(files, estimate, Number(r.quantity) || 1, { forOwner: false });
-
-  const html = `<div style="${FONT};max-width:560px;color:#0f172a">
-    <p style="margin:0 0 4px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#0d9488;font-weight:600">${esc(BUSINESS)}</p>
-    <h2 style="margin:0 0 12px;font-size:20px">Thanks${firstName ? ` ${esc(firstName)}` : ""}, I got your request</h2>
-    <p style="margin:0;font-size:14px;line-height:1.6;color:#334155">
-      I'll look it over and reply within one business day with a firm quote and a realistic turnaround.
-    </p>
-    ${section ? `${section}
-    <p style="margin:14px 0 0;font-size:12px;line-height:1.6;color:#64748b">
-      This is an automatic rough estimate worked out from the size of your files${choices ? ` (${esc(choices)})` : ""}.
-      The final price can change once I've checked supports, finish and how the parts sit on the printer.
-    </p>` : ""}
-    <p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#334155">Questions or changes? Just reply to this email.</p>
-    ${SIGNATURE}
-    <p style="margin:20px 0 0;color:#94a3b8;font-size:12px">Ref ${esc(ref)}</p>
-  </div>`;
-
-  return {
-    from: FROM,
-    to: [r.customer_email],
-    reply_to: TO,
-    subject: `${BUSINESS}: request received (Ref ${ref})`,
-    html,
-  };
-}
-
 async function send(apiKey, payload, label) {
   const res = await fetch(RESEND_ENDPOINT, {
     method: "POST",
@@ -236,25 +173,6 @@ async function send(apiKey, payload, label) {
   const text = await res.text();
   console.log(`Resend response (${label}): ${res.status} ${text}`);
   return res.ok;
-}
-
-// Claims the saved request for its one confirmation email. The id and email
-// must match the row, and the flag means repeat calls send nothing.
-async function claimForCustomer(b) {
-  if (!b.id || !b.email) return null;
-  try {
-    const sql = getDb();
-    const rows = await sql`
-      UPDATE print_requests SET customer_notified_at = NOW()
-      WHERE id = ${b.id} AND customer_email = ${b.email} AND customer_notified_at IS NULL
-      RETURNING id, customer_name, customer_email, material, quality, quantity, files, estimate
-    `;
-    return rows[0] || null;
-  } catch (error) {
-    // Most likely the new columns don't exist yet: POST /api/migrate once.
-    console.error("notify-request: customer confirmation skipped:", error.message);
-    return null;
-  }
 }
 
 export default async function handler(req) {
@@ -277,11 +195,6 @@ export default async function handler(req) {
   const b = await req.json();
 
   const ok = await send(apiKey, ownerEmail(b), "owner");
-
-  // The confirmation is a bonus: if it fails, the request and the owner
-  // email above still stand.
-  const saved = await claimForCustomer(b);
-  if (saved) await send(apiKey, customerEmail(saved), "customer").catch(() => {});
 
   return new Response(JSON.stringify({ ok }), {
     status: ok ? 200 : 502,

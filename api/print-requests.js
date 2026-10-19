@@ -55,17 +55,6 @@ export default async function handler(req) {
         ${b.filamentCost}, ${b.timeCost}, ${b.totalCost}, 'new', ${b.submittedAt}
       )
     `;
-
-    // The automatic price estimate (ranges for the whole order) goes in its
-    // own column, written separately so a database that hasn't been migrated
-    // yet still saves the request itself.
-    if (b.estimate) {
-      try {
-        await sql`UPDATE print_requests SET estimate = ${JSON.stringify(b.estimate)} WHERE id = ${b.id}`;
-      } catch (error) {
-        console.error("print-requests: estimate not saved (run /api/migrate):", error.message);
-      }
-    }
     return json({ ok: true });
   }
 
