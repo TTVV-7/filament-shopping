@@ -19,6 +19,29 @@ const BUSINESS = process.env.BUSINESS_NAME || "Print Yours";
 
 const FONT = "font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,sans-serif";
 
+// Signature at the bottom of the customer's confirmation email, matching the
+// Gmail one. The logo is served by the printyours.ca site (public/email/).
+const SIGNATURE = `<table cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:24px">
+  <tr>
+    <td style="vertical-align:middle;padding-right:18px">
+      <a href="https://printyours.ca"><img src="https://printyours.ca/email/signature-logo.png" width="160" height="60" alt="printyours.ca" style="display:block;width:160px;height:60px;border:0"></a>
+    </td>
+    <td style="vertical-align:top;border-left:3px solid #f5a623;padding-left:16px;font-size:13px;line-height:1.5;color:#64748b">
+      <div style="font-size:17px;font-weight:700;color:#0f172a">Thomas Verigin</div>
+      <div>Owner, <strong style="color:#0f172a">Print Yours</strong> &middot; Custom 3D printing in Vancouver</div>
+      <div style="margin-top:8px;font-size:13px;color:#cbd5e1">
+        <a href="https://printyours.ca" style="color:#0f172a;font-weight:700;text-decoration:none">printyours.ca</a>
+        &nbsp;|&nbsp; <a href="mailto:thomas.verigin@gmail.com" style="color:#0f172a;text-decoration:none">thomas.verigin@gmail.com</a>
+        &nbsp;|&nbsp; <a href="tel:+17789845255" style="color:#0f172a;text-decoration:none;white-space:nowrap">778-984-5255</a>
+      </div>
+      <div style="font-size:12px">Parts, prototypes &amp; small batches &middot; Free quote in 1 business day &middot; Local pickup</div>
+      <table cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-top:10px"><tr>
+        <td style="background:#f5a623;border-radius:4px"><a href="https://printyours.ca/#quote" style="display:inline-block;padding:7px 12px;color:#0f172a;font-weight:700;font-size:13px;text-decoration:none">Get a free quote &rarr;</a></td>
+      </tr></table>
+    </td>
+  </tr>
+</table>`;
+
 function esc(value) {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -188,6 +211,7 @@ function customerEmail(r) {
       The final price can change once I've checked supports, finish and how the parts sit on the printer.
     </p>` : ""}
     <p style="margin:18px 0 0;font-size:14px;line-height:1.6;color:#334155">Questions or changes? Just reply to this email.</p>
+    ${SIGNATURE}
     <p style="margin:20px 0 0;color:#94a3b8;font-size:12px">Ref ${esc(ref)}</p>
   </div>`;
 
