@@ -81,6 +81,9 @@ export default async function handler(req) {
   await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS details        TEXT`;
   await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS status         TEXT DEFAULT 'new'`;
   await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS files          TEXT`;
+  // Automatic price estimate, and when the customer's confirmation went out.
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS estimate       TEXT`;
+  await sql`ALTER TABLE print_requests ADD COLUMN IF NOT EXISTS customer_notified_at TIMESTAMPTZ`;
 
   return json({ ok: true, message: "All tables created" });
 }
